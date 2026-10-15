@@ -1,0 +1,13 @@
+{
+  "appId": "com.example.thewarofwings",
+  "appName": "The War of Wings",
+  "webDir": "www",
+  "backgroundColor": "#161B33",
+  "android": {
+    "backgroundColor": "#161B33"
+  },
+  "ios": {
+    "backgroundColor": "#161B33",
+    "contentInset": "never"
+  }
+}
