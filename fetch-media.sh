@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Higgsfield에서 만든 시작 화면 그림·영상·캐릭터 음성을 www/media 로 내려받습니다.
+set -u
+cd "$(dirname "$0")/www"
+ok=0; fail=0
+mkdir -p "$(dirname "media/title.png")"; if curl -fsSL --retry 2 -o "media/title.png.tmp" "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_192137_71259810-c47d-4451-b092-aef083187a6f.png"; then mv "media/title.png.tmp" "media/title.png"; ok=$((ok+1)); else rm -f "media/title.png.tmp"; fail=$((fail+1)); fi
+mkdir -p "$(dirname "media/title.mp4")"; if curl -fsSL --retry 2 -o "media/title.mp4.tmp" "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_193332_1f44b91c-636d-4ca9-bcb5-1029cb813327.mp4"; then mv "media/title.mp4.tmp" "media/title.mp4"; ok=$((ok+1)); else rm -f "media/title.mp4.tmp"; fail=$((fail+1)); fi
+mkdir -p "$(dirname "media/voice/title1.mp3")"; if curl -fsSL --retry 2 -o "media/voice/title1.mp3.tmp" "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194142_8d4513f5-c021-462f-a7c7-b8dd83c6646f.mp3"; then mv "media/voice/title1.mp3.tmp" "media/voice/title1.mp3"; ok=$((ok+1)); else rm -f "media/voice/title1.mp3.tmp"; fail=$((fail+1)); fi
+mkdir -p "$(dirname "media/voice/ok1.mp3")"; if curl -fsSL --retry 2 -o "media/voice/ok1.mp3.tmp" "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194151_c8301791-7342-4c20-b340-49e26fe10d94.mp3"; then mv "media/voice/ok1.mp3.tmp" "media/voice/ok1.mp3"; ok=$((ok+1)); else rm -f "media/voice/ok1.mp3.tmp"; fail=$((fail+1)); fi
+mkdir -p "$(dirname "media/voice/go1.mp3")"; if curl -fsSL --retry 2 -o "media/voice/go1.mp3.tmp" "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194151_33088f66-650b-488d-a087-23a573dd33ad.mp3"; then mv "media/voice/go1.mp3.tmp" "media/voice/go1.mp3"; ok=$((ok+1)); else rm -f "media/voice/go1.mp3.tmp"; fail=$((fail+1)); fi
+mkdir -p "$(dirname "media/voice/no1.mp3")"; if curl -fsSL --retry 2 -o "media/voice/no1.mp3.tmp" "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194151_c751ccee-238b-4859-951c-c619f38f5b77.mp3"; then mv "media/voice/no1.mp3.tmp" "media/voice/no1.mp3"; ok=$((ok+1)); else rm -f "media/voice/no1.mp3.tmp"; fail=$((fail+1)); fi
+mkdir -p "$(dirname "media/voice/win1.mp3")"; if curl -fsSL --retry 2 -o "media/voice/win1.mp3.tmp" "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194152_464b16d9-ef61-4d87-bdb3-8bdb7dc906bd.mp3"; then mv "media/voice/win1.mp3.tmp" "media/voice/win1.mp3"; ok=$((ok+1)); else rm -f "media/voice/win1.mp3.tmp"; fail=$((fail+1)); fi
+echo "media: $ok downloaded, $fail failed"

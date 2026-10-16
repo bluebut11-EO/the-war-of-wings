@@ -151,6 +151,23 @@ button:focus-visible{outline:3px solid var(--dawn);outline-offset:2px}
 #ending .stats b{display:block;font-size:22px;font-weight:400;color:var(--dawn)}
 #ending .stats span{font-size:12px;color:var(--muted)}
 @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
+
+#title{isolation:isolate}
+
+#title{isolation:isolate}
+
+#title{isolation:isolate}
+
+/* ---------- title art & motion (Higgsfield) ---------- */
+#titleMedia{position:absolute; inset:0; z-index:-1; pointer-events:none!important; overflow:hidden; opacity:0; transition:opacity .7s; background:#000}
+#titleMedia.ready{opacity:1}
+#titleMedia img, #titleMedia video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block}
+#titleMedia .blur{filter:blur(28px) brightness(.7); transform:scale(1.15); display:none}
+#titleMedia video{opacity:0; transition:opacity .9s}
+#titleMedia.moving video{opacity:1}
+#titleMedia .shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,6,20,.5) 0%, rgba(10,6,20,0) 32%, rgba(10,6,20,0) 55%, rgba(10,6,20,.82) 100%)}
+@media (min-aspect-ratio: 4/5){ #titleMedia .blur{display:block} #titleMedia .main, #titleMedia video{object-fit:contain} }
+#title{isolation:isolate}
 </style>
 
 <div id="app">
@@ -193,6 +210,10 @@ button:focus-visible{outline:3px solid var(--dawn);outline-offset:2px}
   <div id="shop" hidden><div class="sheet panel" id="shopSheet"></div></div>
 
   <section id="title" class="gutter" hidden>
+    <div id="titleMedia" aria-hidden="true" data-img='["media/title.png", "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_192137_71259810-c47d-4451-b092-aef083187a6f.png"]' data-vid='["media/title.mp4", "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_193332_1f44b91c-636d-4ca9-bcb5-1029cb813327.mp4"]'><img class="blur" alt=""><img class="main" alt=""><video muted loop playsinline preload="auto"></video><div class="shade"></div></div>
+    
+    
+    
     <div class="logo"><div class="en">The War<br>of Wings</div><div class="ko">날개 전쟁</div></div>
     <div class="menu">
       <button class="btn gold" id="newBtn">새로 시작</button>
@@ -209,6 +230,74 @@ button:focus-visible{outline:3px solid var(--dawn);outline-offset:2px}
 
 <script>
 (() => {
+/* Title art & motion: local media/ copy first, online copy second, drawn title if both fail. */
+(function titleMedia(){
+  const HOOKS = { ok: () => !!(AudioSys.ctx && AudioSys.sfxOn && AudioSys.musicOn), duck: () => {}, voice: () => Clips.play('title', { force: true }) };
+  const box = document.getElementById('titleMedia'); if (!box) return;
+  const host = box.parentElement, imgs = box.querySelectorAll('img'), main = box.querySelector('.main'), blur = box.querySelector('.blur'), vid = box.querySelector('video');
+  const IMG = JSON.parse(box.dataset.img || '[]'), VID = JSON.parse(box.dataset.vid || '[]');
+  let i = 0;
+  main.onload = () => { blur.src = main.currentSrc || main.src; box.classList.add('ready'); };
+  main.onerror = () => { if (++i < IMG.length) main.src = IMG[i]; };
+  if (IMG.length) main.src = IMG[0];
+  const calm = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || (navigator.connection && navigator.connection.saveData);
+  if (!VID.length || calm) vid.remove();
+  vid.muted = true; vid.defaultMuted = true; vid.playsInline = true; vid.loop = true; vid.setAttribute('muted', '');
+  let v = 0;
+  const hasVid = () => vid.isConnected;
+  const shown = () => !host.hidden && !host.closest('[hidden]');
+  const play = () => { if (shown() && vid.isConnected) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); } };
+  const load = () => { vid.src = VID[v]; vid.load(); };
+  if (hasVid()) vid.addEventListener('error', () => { if (++v < VID.length) load(); else vid.remove(); });
+  if (hasVid()) vid.addEventListener('playing', () => { box.classList.add('moving', 'ready'); });
+  if (hasVid()) vid.addEventListener('canplay', play);
+  new MutationObserver(() => { if (shown()) play(); else vid.pause(); }).observe(host, { attributes: true, attributeFilter: ['hidden'] });
+  document.addEventListener('pointerdown', play, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) vid.pause(); else play(); });
+  // Play the clip's spoken line once, after the first tap on the title screen (only when game sound is on).
+  let voiced = false;
+  const voice = () => {
+    if (voiced || !shown()) return;
+    let ok = true; try { ok = HOOKS.ok(); } catch (e) {}
+    if (!ok) return;
+    if (HOOKS.voice){ voiced = true; try { HOOKS.voice(); } catch (e) {} return; }
+    if (!vid.isConnected || vid.readyState < 2) return;
+    voiced = true; vid.currentTime = 0; vid.muted = false; vid.volume = 1; play();
+    try { HOOKS.duck(true); } catch (e) {}
+    let last = 0;
+    const done = () => { vid.muted = true; vid.removeEventListener('timeupdate', tick); vid.removeEventListener('pause', done); try { HOOKS.duck(false); } catch (e) {} };
+    const tick = () => { if (vid.currentTime + .3 < last) done(); last = vid.currentTime; };
+    vid.addEventListener('timeupdate', tick); vid.addEventListener('pause', done);
+  };
+  document.addEventListener('click', () => setTimeout(voice, 60));
+  if (hasVid()) load();
+})();
+
+/* Character voice lines made with Higgsfield (ElevenLabs v4 voices). */
+const Clips = (() => {
+  const LIB = {"title": [{"l": "media/voice/title1.mp3", "r": "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194142_8d4513f5-c021-462f-a7c7-b8dd83c6646f.mp3"}], "ok": [{"l": "media/voice/ok1.mp3", "r": "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194151_c8301791-7342-4c20-b340-49e26fe10d94.mp3"}], "go": [{"l": "media/voice/go1.mp3", "r": "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194151_33088f66-650b-488d-a087-23a573dd33ad.mp3"}], "no": [{"l": "media/voice/no1.mp3", "r": "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194151_c751ccee-238b-4859-951c-c619f38f5b77.mp3"}], "win": [{"l": "media/voice/win1.mp3", "r": "https://d8j0ntlcm91z4.cloudfront.net/user_3KkGGOriAdCX1K3K6BvMto6W8aM/hf_20261016_194152_464b16d9-ef61-4d87-bdb3-8bdb7dc906bd.mp3"}]};
+  const cache = {}; let cur = null, last = 0, okFn = () => true;
+  const make = c => { const a = new Audio(); a.preload = 'auto'; let tried = 0; a.addEventListener('error', () => { if (tried++ === 0){ a.src = c.r; if (a._want) a.play().catch(() => {}); } }); a.src = c.l; return a; };
+  return {
+    setOk(f){ okFn = f; },
+    has(key){ return !!LIB[key]; },
+    play(key, opt = {}){
+      try {
+        if (!LIB[key] || !okFn()) return false;
+        const now = Date.now(); if (!opt.force && now - last < 700) return false; last = now;
+        const list = LIB[key], i = Math.floor(Math.random() * list.length), c = list[i], id = key + i;
+        const a = cache[id] || (cache[id] = make(c));
+        if (cur && cur !== a){ cur.pause(); }
+        cur = a; a._want = true; try { a.currentTime = 0; } catch (e) {}
+        a.volume = opt.vol == null ? 1 : opt.vol;
+        const p = a.play(); if (p && p.catch) p.catch(() => {});
+        return true;
+      } catch (e) { return false; }
+    },
+    warm(keys){ try { (keys || Object.keys(LIB)).forEach(k => LIB[k].forEach((c, i) => { const id = k + i; if (!cache[id]) cache[id] = make(c); })); } catch (e) {} },
+  };
+})();
+
 'use strict';
 /* =========================================================
    The War of Wings — util + audio (music sequencer & SFX)
@@ -2548,6 +2637,7 @@ async function finishBattle(){
   if (res === 'win'){
     G.stats.wins++;
     AudioSys.play('victory');
+    Clips.play('win', { force: true });
     let xp = 0, coins = 0;
     for (const e of B.enemies){ xp += Math.round(6 + e.lv * 4.5) * (e.boss ? 6 : 1); coins += (3 + e.lv * 2) * (e.boss ? 5 : 1); }
     G.coins += coins;
@@ -2562,6 +2652,7 @@ async function finishBattle(){
         const before = statsFor(id, p.lv); p.lv++; const after = statsFor(id, p.lv);
         if (p.hp > 0) p.hp = Math.min(after.maxhp, p.hp + (after.maxhp - before.maxhp));
         AudioSys.sfx('levelup');
+        Clips.play('go');
         const u = B.allies.find(a => a.id === id); if (u){ u.lv = p.lv; burstAt(u, '#FFE08A', 16, true); floatText(u, 'Lv UP!', '#FFE08A', true); renderAllies(); }
         await blog(`${DRAGONS[id].name}의 레벨이 올랐다! (Lv ${p.lv})`, 900);
         const nw = DRAGONS[id].skills.find(s => s.lv === p.lv);
@@ -2570,6 +2661,7 @@ async function finishBattle(){
     }
   } else if (res === 'lose'){
     AudioSys.sfx('lose'); AudioSys.stop();
+    Clips.play('no', { force: true });
     await blog('모두 기절하고 말았다...', 1200);
   }
   await fade(true);
@@ -2811,8 +2903,9 @@ function showTitle(){
   AudioSys.play('title');
 }
 $('titleSound').onclick = () => {
+  const wasOn = !!(AudioSys.ctx && AudioSys.musicOn && AudioSys.sfxOn && AudioSys.cur);
   AudioSys.init();
-  const on = !(AudioSys.ctx && AudioSys.musicOn && AudioSys.cur);
+  const on = !wasOn;
   AudioSys.setMusic(on); AudioSys.setSfx(on);
   if (on){ AudioSys.play('title'); AudioSys.sfx('confirm'); }
   $('titleSound').textContent = on ? '소리 끄기' : '소리 켜기';
@@ -2902,6 +2995,8 @@ window.__wow = {
 resize();
 showTitle();
 requestAnimationFrame(frame);
+
+Clips.setOk(() => !!(AudioSys.ctx && AudioSys.sfxOn));
 
 })();
 </script>
